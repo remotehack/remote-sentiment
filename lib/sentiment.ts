@@ -21,16 +21,3 @@ export function sentimentScore(message: string): number {
 
   return sentimentScore;
 }
-
-
-
-
-// hacky mchackface
-function main(): void {
-  const unhappyMessage: string = "Hey, this is terrible, I can't believe how rubbish it is";
-  const happyMessage: string = "I really appreciate how nice things are right now";
-
-  console.log(sentimentScore(unhappyMessage));
-}
-
-main();
