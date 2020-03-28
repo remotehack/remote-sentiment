@@ -18,7 +18,10 @@
   },
   "homepage": "https://github.com/remotehack/remote-sentiment#readme",
   "dependencies": {
-    "express": "^4.17.1"
+    "apos-to-lex-form": "^1.0.5",
+    "express": "^4.17.1",
+    "natural": "^0.6.3",
+    "stopword": "^1.0.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.3",
