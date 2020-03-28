@@ -12,7 +12,7 @@ let createdModel;
 toxicity.load(0.9, ["toxicity", "severe_toxicity", "identity_attack", "insult", "threat", "sexual_explicit", "obscene"]).then((model) => {
   createdModel = model;
 
-  neuralSentimentScore(["You suck"]).then(console.log)
+  infringements(["You suck"]).then(console.log)
 })
 
 
