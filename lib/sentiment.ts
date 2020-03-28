@@ -3,12 +3,9 @@ const aposToLexForm = require('apos-to-lex-form');
 const natural = require('natural');
 const StopWord = require('stopword')
 
-// hacky mchackface
-function main(): void {
-  const unhappyMessage: string = "Hey, this is terrible, I can't believe how rubbish it is";
-  const happyMessage: string = "I really appreciate how nice things are right now";
 
-  const lexedMessage = aposToLexForm(happyMessage).toLowerCase();
+export function sentimentScore(message: string): number {
+  const lexedMessage = aposToLexForm(message).toLowerCase();
   const alphaOnlyMessage = lexedMessage.replace(/[^a-zA-Z\s]+/g, '');
 
   const { WordTokenizer } = natural;
@@ -16,19 +13,24 @@ function main(): void {
   const tokenizedMessage = tokenizer.tokenize(alphaOnlyMessage);
 
   // TODO: spelling correction *maybe*
-
-
   const filteredMessage = StopWord.removeStopwords(tokenizedMessage);
 
   const { SentimentAnalyzer, PorterStemmer } = natural;
   const analyzer = new SentimentAnalyzer('English', PorterStemmer, 'afinn');
-  const analysis = analyzer.getSentiment(filteredMessage);
+  const sentimentScore = analyzer.getSentiment(filteredMessage);
 
-  console.log(analysis);
+  return sentimentScore;
 }
 
-function sentimentScore(message: string): number {
-  return 1.0
+
+
+
+// hacky mchackface
+function main(): void {
+  const unhappyMessage: string = "Hey, this is terrible, I can't believe how rubbish it is";
+  const happyMessage: string = "I really appreciate how nice things are right now";
+
+  console.log(sentimentScore(unhappyMessage));
 }
 
 main();
