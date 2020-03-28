@@ -4,6 +4,7 @@ import express from "express";
 import bodyParser from "body-parser";
 
 import { sentimentScore } from "../lib/sentiment";
+import { infringements } from "../lib/sentiment";
 
 import { addSeconds, isAfter } from "date-fns";
 
@@ -40,12 +41,12 @@ app.get("/", (req, res) => {
 });
 
 app.post("/webhooks/slack", (req, res) => {
-  if(req.body.event.subtype) {
+  if (req.body.event.subtype) {
     return res.send("Not responding");
   }
 
   //console.log(req.body)
-  
+
   const slackMessageEvent = req.body.event as ISlackMessageEvent;
 
   const messageSentiment = sentimentScore(slackMessageEvent.text);
@@ -85,8 +86,9 @@ app.post("/webhooks/slack", (req, res) => {
     index: 'slack-messages',
     body: {
       aggs: {
-        avg_sentiment: { 
-          avg : { field : "sentimentScore" } }
+        avg_sentiment: {
+          avg: { field: "sentimentScore" }
+        }
       },
       query: {
         match_all: {}
@@ -99,7 +101,7 @@ app.post("/webhooks/slack", (req, res) => {
       from: 0,
       size: 5
     }
-  } , (err, result) => {
+  }, (err, result) => {
     if (err) console.log(err, result);
     // TODO: catch when no data/average is present
     const averageSentiment = result.body.aggregations.avg_sentiment.value;
@@ -108,11 +110,17 @@ app.post("/webhooks/slack", (req, res) => {
     // Some arbitrary cut off for negativity
     const lastPromptDate = lastPromptCache[slackMessageEvent.channel];
     const nextAllowedPromptDate = addSeconds(lastPromptDate, 30);
-    if(messageSentiment < 0 && averageSentiment < 0 && (!lastPromptCache[slackMessageEvent.channel] || isAfter(new Date(), nextAllowedPromptDate))) { 
-      web.chat.postMessage({channel: slackMessageEvent.channel, text: "This channel seems to be quite upset, maybe consider jumping on a call with pictures of bunnies"})
+    if (messageSentiment < 0 && averageSentiment < 0 && (!lastPromptCache[slackMessageEvent.channel] || isAfter(new Date(), nextAllowedPromptDate))) {
+      web.chat.postMessage({ channel: slackMessageEvent.channel, text: "This channel seems to be quite upset, maybe consider jumping on a call with pictures of bunnies" })
       lastPromptCache[slackMessageEvent.channel] = new Date();
     }
   });
+
+  // EVEN LONGER METHOD
+  infringements([slackMessageEvent.text]).then((infringementArray) => {
+    web.chat.postMessage({ channel: slackMessageEvent.channel, text: `It looks like you're being mean. You've been flagged for ${infringementArray.join(', ')}` })
+  })
+
 
   // res.send(req.body.challenge);
   res.send("OK");
