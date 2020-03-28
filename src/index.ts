@@ -44,7 +44,7 @@ app.post("/webhooks/slack", (req, res) => {
     return res.send("Not responding");
   }
 
-  //console.log(req.body)
+  console.log(req.body)
   
   const slackMessageEvent = req.body.event as ISlackMessageEvent;
 
@@ -53,14 +53,15 @@ app.post("/webhooks/slack", (req, res) => {
   const splitMessageDate = slackMessageEvent.ts.split(".")[0];
   // No idea why we need to multiply this, but it works!
   const messageDate = new Date(parseInt(splitMessageDate) * 1000);
-
+  
   client.index({
     index: 'slack-messages',
     // type: '_doc', // uncomment this line if you are using Elasticsearch ≤ 6
     body: {
-      ...slackMessageEvent,
+      //...slackMessageEvent, // Let's not store personal messages in ES
       sentimentScore: messageSentiment,
-      messageDate
+      messageDate,
+      channel: slackMessageEvent.channel
     }
   }, (err: any, result: any) => {
     if (err) console.log(err, result)
@@ -71,7 +72,7 @@ app.post("/webhooks/slack", (req, res) => {
   console.log(`Sentiment: ${messageSentiment} for ${slackMessageEvent.text}`);
 
   if (Math.abs(messageSentiment) > 1) {
-    const reactionName = messageSentiment > 0 ? "thumbsup" : "cry";
+    const reactionName = messageSentiment > 0 ? "green_heart" : "cry";
 
     // See: https://api.slack.com/methods/chat.postMessage
     web.reactions.add({ channel: slackMessageEvent.channel, timestamp: slackMessageEvent.ts, name: reactionName });
