@@ -5,11 +5,13 @@ import bodyParser from "body-parser";
 
 import { sentimentScore } from "../lib/sentiment";
 
+import { addSeconds, isAfter } from "date-fns";
+
 import { Client } from '@elastic/elasticsearch';
 const client = new Client({ node: 'http://localhost:9200' })
 
 // Slack bits
-const { WebClient } = require('@slack/web-api');
+import { WebClient } from '@slack/web-api';
 const token = process.env.SLACK_TOKEN;
 const web = new WebClient(token);
 
@@ -26,6 +28,10 @@ export interface ISlackMessageEvent {
   user: string,
   text: string,
   ts: string
+}
+
+const lastPromptCache = {
+
 }
 
 // define a route handler for the default home page
@@ -73,7 +79,7 @@ app.post("/webhooks/slack", (req, res) => {
   }
 
   // TODO: one after the other....
-
+  // TODO: also bucket by channel
   // Overall sentiment
   client.search({
     index: 'slack-messages',
@@ -96,7 +102,16 @@ app.post("/webhooks/slack", (req, res) => {
   } , (err, result) => {
     if (err) console.log(err, result);
     // TODO: catch when no data/average is present
-    console.log(`Average sentiment: ${result.body.aggregations.avg_sentiment.value}`);
+    const averageSentiment = result.body.aggregations.avg_sentiment.value;
+    console.log(`Average sentiment: ${averageSentiment}`);
+
+    // Some arbitrary cut off for negativity
+    const lastPromptDate = lastPromptCache[slackMessageEvent.channel];
+    const nextAllowedPromptDate = addSeconds(lastPromptDate, 30);
+    if(messageSentiment < 0 && averageSentiment < 0 && (!lastPromptCache[slackMessageEvent.channel] || isAfter(new Date(), nextAllowedPromptDate))) { 
+      web.chat.postMessage({channel: slackMessageEvent.channel, text: "This channel seems to be quite upset, maybe consider jumping on a call with pictures of bunnies"})
+      lastPromptCache[slackMessageEvent.channel] = new Date();
+    }
   });
 
   // res.send(req.body.challenge);
