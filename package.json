@@ -1,0 +1,22 @@
+{
+  "name": "remote-sentiment",
+  "version": "1.0.0",
+  "description": "Calculate sentiment from slack conversations",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/remotehack/remote-sentiment.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/remotehack/remote-sentiment/issues"
+  },
+  "homepage": "https://github.com/remotehack/remote-sentiment#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
